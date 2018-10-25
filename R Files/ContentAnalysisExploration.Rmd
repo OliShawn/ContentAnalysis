@@ -1,0 +1,114 @@
+---
+title: "ContentAnalysis"
+author: "Shawn Olichwier"
+date: "October 15, 2018"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Lets first read in the file we need to parse. We will be only looking through one at a time, so load the semester you are looking to parse.
+
+Spring2015 has no essays, so we will not use it for our analysis.
+
+Spring 2016
+```{r}
+content <- read.csv('C:\\Users\\Shawn\\Desktop\\Data Science- Intern\\ContentAnalysis\\Spring2016.csv', header = TRUE)
+#content
+contentColumn <- content[1,23]
+```
+
+Fall 2017
+```{r}
+content <- read.csv('C:\\Users\\Shawn\\Desktop\\Data Science- Intern\\ContentAnalysis\\Fall2017.csv', header = TRUE)
+#content
+
+```
+
+Spring 2018
+```{r}
+content <- read.csv('C:\\Users\\Shawn\\Desktop\\Data Science- Intern\\ContentAnalysis\\Spring2018.csv', header = TRUE)
+#content
+
+```
+
+
+
+Next we start to look through out content data, which will only be the column of our CSV that is the essays, looking for our certain words.
+```{r}
+# Here we convert everything to lowercase and convert the whole thing to a string
+contentColumn <- tolower(contentColumn)
+contentColumn <- toString(contentColumn)
+
+# Next we are need to remove the punctuation marks, so we are left with only words.
+contentColumn <- gsub("[[:punct:]]" , "", contentColumn) # removes punctuation
+contentColumn <- gsub("[\r\n\t]", "", contentColumn) # removes the line and tab breaks
+#print(content)
+
+# At this point, you should look over your essay and make sure nothing is off. If it looks okay, move on to the next chunk to make our counts. 
+
+#Eventually, we will automate this whole process to grab, seperate, and count for every essay. Gotta get it working first.  ***************************************
+```
+
+
+Finding the counts of each word and inserting it into a dictionary that stores the word as a key, and the count of that word as the value.
+```{r}
+table <- table(unlist(strsplit(contentColumn, " "))) # split the essay into individual words
+
+# formatting the table and renaming the columns
+freq.table <-cbind.data.frame(names(table),as.integer(table))
+names(freq.table)[names(freq.table) == "names(table)"] <- "Names"
+names(freq.table)[names(freq.table) == "as.integer(table)"] <- "Word.Count"
+
+# counting the frequency of each word and storing it into a table. Sorted descending.
+newtable <- freq.table[rev(order(freq.table$Word.Count)),]
+#print(newtable)
+```
+
+
+Are there words showing up, that we may need to exclude for every essay? Common English words?
+```{r}
+# exclude is our common english word list
+exclude <- c('the','and','of','to','a','in','is','be','it','or','are','not','by','that','for','us','with','at')
+
+# excludes every row where the 'Names' is in our exclude list and the count is above 5
+finalTable <- newtable[newtable$Word.Count >5, ]
+finalTable <- finalTable[ !(finalTable$Names %in% exclude), ]
+
+# this splits each column into it's own working list
+wordCount <- finalTable$Word.Count
+words <- levels(droplevels(finalTable$Names))
+```
+
+
+```{r}
+# can we insert the finalTable results into a section of the CSV we read in earlier?
+#content[1,26] <- finalTable
+library(rlist)
+result <- list()
+
+for (i in 1:(length(words))){
+  #result.append(finalTable[i,])
+  result <- append(result, words[i])
+  result <- append(result, wordCount[i])
+}
+
+print(result)
+
+########################
+#Wednesday Start here
+#content[1,26] <- finalTable$Names[2]
+
+```
+
+
+
+can we make this a working function to check every row in that column? and then return the count dictionary to the next column?
+
+
+
+
